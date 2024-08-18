@@ -1,0 +1,4 @@
+faker
+pytest
+allure-pytest
+requests
