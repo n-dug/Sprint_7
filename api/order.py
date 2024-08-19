@@ -28,7 +28,6 @@ class Order:
     @allure.step('Accept an order by a courier')
     def accept_order(self, order_id, courier_id):
         url_accept_order = f"{url.BASE_URL}{url.ACCEPT_ORDER}/{order_id}?courierId={courier_id}"
-        print(url_accept_order)
         return requests.put(url_accept_order, timeout=40)
 
     @allure.step('Cancel an order')

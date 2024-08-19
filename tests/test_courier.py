@@ -1,15 +1,14 @@
 import allure
 import pytest
-from api.courier import Courier
-from conftest import created_courier, courier_delete_after_use
+from conftest import created_courier
+import helpers.endpoints as url
 
 
 @allure.epic('API testing of Yandex.Scooter. Test cases for couriers')
 class TestSignUpCourier:
     @allure.title('Sign up using correct data')
-    def test_create_courier_success(self, courier_delete_after_use):
-        courier_delete_after_use = Courier()
-        response = courier_delete_after_use.create_courier()
+    def test_create_courier_success(self, created_courier):
+        response = created_courier.create_courier()
         assert response.status_code == 201 and response.json() == {'ok': True}
 
     @allure.title('Sign up using duplicated data')
@@ -17,28 +16,21 @@ class TestSignUpCourier:
         response = created_courier.create_courier(
             created_courier.get_login(), created_courier.get_password(), created_courier.get_name())
         assert response.status_code == 409 and response.json().get(
-            'message') == 'Этот логин уже используется. Попробуйте другой.'
+            'message') == url.TEXT_LOGIN_EXISTS_409
 
     @allure.title('Sign up without login or password')
     @pytest.mark.parametrize("key", ["login", "password"])
-    def test_create_courier_without_login_or_password_failed(self, courier_delete_after_use, key):
-        courier_delete_after_use = Courier()
-        courier_delete_after_use.create_courier()
-        creds = courier_delete_after_use.get_account_data()
-        creds[key] = ''
-        response = courier_delete_after_use.create_courier(creds)
+    def test_create_courier_without_login_or_password_failure(self, created_courier, key):
+        created_courier.data[key] = None
+        response = created_courier.create_courier(name="NoLoginPass")
         assert response.status_code == 400 and response.json().get(
-            'message') == 'Недостаточно данных для создания учетной записи'
+            'message') == url.TEXT_NOT_ENOUGH_CREDENTIALS_SIGN_UP_400
 
     @allure.title('Sign up without name')
-    def test_create_courier_without_name_success(self, courier_delete_after_use):
-        courier_delete_after_use = Courier()
-        courier_delete_after_use.create_courier()
-        creds = courier_delete_after_use.get_account_data()
-        creds['name'] = ''
-        response = courier_delete_after_use.create_courier(creds)
-        assert (response.status_code == 409 and response.json().get('message') ==
-                'Этот логин уже используется. Попробуйте другой.')
+    def test_create_courier_without_name_success(self, created_courier):
+        created_courier.data['name'] = None
+        response = created_courier.create_courier()
+        assert response.status_code == 201 and response.json() == {'ok': True}
 
 
 class TestSignInCourier:
@@ -53,27 +45,25 @@ class TestSignInCourier:
     def test_login_without_login_or_password_failure(self, created_courier, key):
         created_courier.data[key] = ''
         response = created_courier.login_courier()
-        assert response.status_code == 400 and response.json().get('message') == 'Недостаточно данных для входа'
+        assert (response.status_code == 400 and response.json().get('message')
+                == url.TEXT_NOT_ENOUGH_CREDENTIALS_SIGN_IN_400)
 
     @allure.title('Sign in using incorrect login or password')
     @pytest.mark.parametrize("key", ("login", "password"))
     def test_login_with_wrong_credentials_failure(self, created_courier, key):
         created_courier.data[key] = 'Unknown'
         response = created_courier.login_courier()
-        assert response.status_code == 404 and response.json().get('message') == 'Учетная запись не найдена'
+        assert response.status_code == 404 and response.json().get('message') == url.TEXT_ACCOUNT_NOT_FOUND_404
 
 
 class TestDeleteCourier:
     @allure.title('Delete courier with a correct ID')
-    def test_delete_courier_success(self):
-        courier = Courier()
-        courier.create_courier()
-        response = courier.delete_courier(courier.get_courier_id())
+    def test_delete_courier_success(self, created_courier):
+        response = created_courier.delete_courier(created_courier.get_courier_id())
         assert response.status_code == 200 and response.json() == {'ok': True}
 
     @allure.title('Delete courier with incorrect ID')
-    def test_delete_courier_with_incorrect_id(self, courier_delete_after_use):
-        courier_delete_after_use = Courier()
-        response = courier_delete_after_use.delete_courier(666)
+    def test_delete_courier_with_incorrect_id(self, created_courier):
+        response = created_courier.delete_courier(666)
         assert response.status_code == 404
-        assert response.json()['message'] == 'Курьера с таким id нет.'
+        assert response.json()['message'] == url.TEXT_NO_COURIER_WITH_ID_404

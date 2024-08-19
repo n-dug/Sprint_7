@@ -3,7 +3,7 @@
 allure_results - каталог с отчетами allure
 tests/test_order.py - тесты на ручки "Создать заказ", "Показать список заказов"
 tests/test_courier.py - тесты на ручки "Создать курьера", "Логин курьера"
-conftest.py - фикстуры
+conftest.py - фикстура создания курьера и его удаления после использования
 helpers/endpoints.py - файл с URL
 helpers/generate_order_data.py - файл с генератором данных о заказе
 requirements.txt - файл с внешними зависимостями

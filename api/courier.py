@@ -15,7 +15,6 @@ class Courier:
         def generate_random_string(length):
             letters = string.ascii_lowercase
             random_string = ''.join(random.choice(letters) for _ in range(length))
-            print(random_string)
             return random_string
         data = {}
         login = generate_random_string(10)
